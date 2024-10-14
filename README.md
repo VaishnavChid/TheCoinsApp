@@ -23,6 +23,10 @@ The Crypto Filtering App is an iOS application designed to help users filter and
 - **UIKit**: Framework for building the user interface.
 - **Codable**: For parsing and handling JSON data from cryptocurrency APIs.
 
+## Test Cases
+
+- Please note test cases are just sample test cases to show case whats possible. There are improvements which can be made.
+
 ## Getting Started
 
 ### Prerequisites
