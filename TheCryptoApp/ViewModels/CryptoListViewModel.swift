@@ -3,6 +3,12 @@ import Foundation
 
 class CryptoListViewModel {
     
+    private var networkService: NetworkServiceProtocol
+    
+    init(networkService: NetworkServiceProtocol = NetworkService()) {
+        self.networkService = networkService
+    }
+    
     // MARK: - Properties
     var dataModel: [DataResponseModel] = []
     var originalDataModel: [DataResponseModel] = []
@@ -10,7 +16,7 @@ class CryptoListViewModel {
     
     // MARK: - Fetch Data
     func fetchCryptoData(completion: @escaping (Result<[DataResponseModel], ErrorMessage>) -> Void) {
-        NetworkService.getCryptoData { result in
+        networkService.getCryptoData { result in
             switch result {
             case .success(let successData):
                 self.dataModel = successData
@@ -27,9 +33,9 @@ class CryptoListViewModel {
         if searchText.isEmpty {
             dataModel = originalDataModel
         } else {
-            dataModel = originalDataModel.filter { 
-                $0.name?.localizedCaseInsensitiveContains(searchText) ?? false || 
-                $0.symbol?.localizedCaseInsensitiveContains(searchText) ?? false 
+            dataModel = originalDataModel.filter {
+                $0.name?.localizedCaseInsensitiveContains(searchText) ?? false ||
+                $0.symbol?.localizedCaseInsensitiveContains(searchText) ?? false
             }
         }
     }

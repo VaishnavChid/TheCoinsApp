@@ -1,9 +1,13 @@
 
 import Foundation
 
-struct NetworkService {
+protocol NetworkServiceProtocol {
+    func getCryptoData(completion: @escaping (Result<[DataResponseModel], ErrorMessage>) -> Void)
+}
+
+struct NetworkService: NetworkServiceProtocol {
     
-    static func getCryptoData(completion: @escaping (Result<[DataResponseModel], ErrorMessage>) -> Void) {
+    func getCryptoData(completion: @escaping (Result<[DataResponseModel], ErrorMessage>) -> Void) {
         performRequest(endpoint: .getData) { result in
             switch result {
             case .success(let apiResponse):
@@ -16,7 +20,7 @@ struct NetworkService {
     
     // MARK: - Private helper method
     
-    static func performRequest(endpoint: EndPoints, completion: @escaping(Result<[DataResponseModel], ErrorMessage>) -> Void) {
+    func performRequest(endpoint: EndPoints, completion: @escaping(Result<[DataResponseModel], ErrorMessage>) -> Void) {
         URLSession.shared.dataTask(with: endpoint.url) { data, response, error in
             if let _ = error {
                 completion(.failure(.unableToComplete))
