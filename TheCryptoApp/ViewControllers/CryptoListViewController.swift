@@ -6,14 +6,23 @@ class CryptoListViewController: UIViewController {
     // MARK: - UI Elements
     
     let listTableView = UITableView()
-    private let chipsViewController = ChipsViewController()
     let spinner = UIActivityIndicatorView(style: .large)
     
     // MARK: - Properties
+    private let viewModel: CryptoListViewModel
+    private let chipsViewController: ChipsViewController
     
-    var dataModel: [DataResponseModel]?
-    var originalDataModel: [DataResponseModel]?
-    var activeFilters: [CryptoFilter] = []
+    init(viewModel: CryptoListViewModel = CryptoListViewModel()) {
+        self.viewModel = viewModel
+        let filterOptions = [CryptoFilter.active.rawValue, CryptoFilter.inactive.rawValue, CryptoFilter.token.rawValue, CryptoFilter.coin.rawValue, CryptoFilter.new.rawValue]
+        let chipsViewModel = ChipsViewModel(filterOptions: filterOptions)
+        self.chipsViewController = ChipsViewController(viewModel: chipsViewModel)
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     // MARK: - VC Cycle
     
@@ -80,7 +89,7 @@ class CryptoListViewController: UIViewController {
         view.addSubview(chipsViewController.view)
         chipsViewController.view.translatesAutoresizingMaskIntoConstraints = false
         chipsViewController.delegate = self
-    
+        
         NSLayoutConstraint.activate([
             chipsViewController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             chipsViewController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -97,6 +106,7 @@ class CryptoListViewController: UIViewController {
     
     private func hideLoader() {
         spinner.stopAnimating()
+        spinner.removeFromSuperview()
         listTableView.backgroundView = nil
     }
     
@@ -104,16 +114,17 @@ class CryptoListViewController: UIViewController {
     
     private func makeAPICall() {
         showLoader()
-        NetworkService.getCryptoData { [weak self] result in
-            guard let self else { return }
-            switch result {
-            case .success(let successData):
-                self.dataModel = successData
-                self.originalDataModel = successData
-                reloadTableViewMainThread()
-            case .failure(let failure):
-                print(failure.rawValue)
-                hideLoader()
+        viewModel.fetchCryptoData { [weak self] result in
+            DispatchQueue.main.async {
+                self?.hideLoader()
+                switch result {
+                case .success(let data):
+                    self?.listTableView.reloadData()
+                    self?.setupChipsViewController()
+                case .failure(let error):
+                    print("Error fetching data: \(error.rawValue)")
+                    self?.showErrorAlert(message: error.rawValue)
+                }
             }
         }
     }
@@ -126,7 +137,13 @@ class CryptoListViewController: UIViewController {
             setupChipsViewController()
         }
     }
-
+    
+    private func showErrorAlert(message: String) {
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
 }
 
 // MARK: - UITableViewDataSource extension
@@ -134,14 +151,12 @@ class CryptoListViewController: UIViewController {
 extension CryptoListViewController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        guard let dataModel else { return 0 }
-        return dataModel.count
+        return viewModel.dataModel.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: DetailsTableViewCell.reuseId, for: indexPath) as? DetailsTableViewCell else { return UITableViewCell() }
-        guard let dataModel else { return UITableViewCell() }
-        cell.configure(with: dataModel[indexPath.row])
+        cell.configure(with: viewModel.dataModel[indexPath.row])
         return cell
     }
     
@@ -158,10 +173,10 @@ extension CryptoListViewController: UISearchBarDelegate {
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchText.isEmpty {
-            activeFilters.removeAll()
+            viewModel.activeFilters.removeAll()
             makeAPICall()
         } else {
-            dataModel = dataModel?.filter({ $0.name?.localizedCaseInsensitiveContains(searchText) ?? false || $0.symbol?.localizedCaseInsensitiveContains(searchText) ?? false })
+            viewModel.dataModel = viewModel.dataModel.filter({ $0.name?.localizedCaseInsensitiveContains(searchText) ?? false || $0.symbol?.localizedCaseInsensitiveContains(searchText) ?? false })
             listTableView.reloadData()
         }
     }
@@ -178,45 +193,45 @@ extension CryptoListViewController: ChipsViewControllerDelegate {
     
     func didUpdateSelectedFilters(_ selectedFilter: String, isSelected: Bool) {
         
-        dataModel = originalDataModel
+        viewModel.dataModel = viewModel.originalDataModel
         
         switch selectedFilter {
         case "Active Coins":
             if isSelected {
-                activeFilters.append(.active)
+                viewModel.activeFilters.append(.active)
             } else {
-                activeFilters.removeAll { $0 == .active }
+                viewModel.activeFilters.removeAll { $0 == .active }
             }
         case "Inactive Coins":
             if isSelected {
-                activeFilters.append(.inactive)
+                viewModel.activeFilters.append(.inactive)
             } else {
-                activeFilters.removeAll { $0 == .inactive }
+                viewModel.activeFilters.removeAll { $0 == .inactive }
             }
         case "Only Tokens":
             if isSelected {
-                activeFilters.append(.token)
+                viewModel.activeFilters.append(.token)
             } else {
-                activeFilters.removeAll { $0 == .token }
+                viewModel.activeFilters.removeAll { $0 == .token }
             }
         case "Only Coins":
             if isSelected {
-                activeFilters.append(.coin)
+                viewModel.activeFilters.append(.coin)
             } else {
-                activeFilters.removeAll { $0 == .coin }
+                viewModel.activeFilters.removeAll { $0 == .coin }
             }
         case "New Coins":
             if isSelected {
-                activeFilters.append(.new)
+                viewModel.activeFilters.append(.new)
             } else {
-                activeFilters.removeAll { $0 == .new }
+                viewModel.activeFilters.removeAll { $0 == .new }
             }
         default:
             break
         }
         
-        if !activeFilters.isEmpty {
-            dataModel = CryptoFilterModel.applyFilters(originalDataModel: dataModel ?? [], filters: activeFilters)
+        if !viewModel.activeFilters.isEmpty {
+            viewModel.dataModel = CryptoFilterModel.applyFilters(originalDataModel: viewModel.dataModel, filters: viewModel.activeFilters)
         }
         listTableView.reloadData()
     }

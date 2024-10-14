@@ -1,10 +1,10 @@
 
-enum CryptoFilter {
-    case active
-    case inactive
-    case coin
-    case token
-    case new
+enum CryptoFilter: String {
+    case active = "Active Coins"
+    case inactive = "Inactive Coins"
+    case coin = "Only Coins"
+    case token = "Only Tokens"
+    case new = "New Coins"
 }
 
 struct CryptoFilterModel {

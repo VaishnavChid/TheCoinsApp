@@ -7,7 +7,7 @@ struct DataResponseModel: Codable {
     var symbol: String?
     var isNew: Bool = false
     var isActive: Bool = false
-    var type: CurrencyType?
+    var type: CryptoType?
 
     enum CodingKeys: String, CodingKey {
         case name, symbol, type
@@ -15,7 +15,7 @@ struct DataResponseModel: Codable {
         case isActive = "is_active"
     }
     
-    enum CurrencyType: String, Codable {
+    enum CryptoType: String, Codable {
         case coin, token
     }
     

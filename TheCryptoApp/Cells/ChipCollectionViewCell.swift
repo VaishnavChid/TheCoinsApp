@@ -1,14 +1,19 @@
 
 import UIKit
 
-class ChipCell: UICollectionViewCell {
+class ChipCollectionViewCell: UICollectionViewCell {
     
+    // MARK: - Constants
+    static let reuseId = String(describing: ChipCollectionViewCell.self)
+    
+    // MARK: - State Management
     override var isSelected: Bool {
         didSet {
             contentView.backgroundColor = isSelected ? UIColor.blue : UIColor.lightGray
         }
     }
     
+    // MARK: - UI Properties
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.textColor = .black
@@ -18,8 +23,21 @@ class ChipCell: UICollectionViewCell {
         return label
     }()
     
+    // MARK: - Properties for customization
+    let selectedBackgroundColor: UIColor = .systemGray
+    let deselectedBackgroundColor: UIColor = .lightGray
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
+        setupUI()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Setup UI
+    private func setupUI() {
         contentView.backgroundColor = .lightGray
         contentView.layer.cornerRadius = 16
         contentView.layer.masksToBounds = true
@@ -32,10 +50,6 @@ class ChipCell: UICollectionViewCell {
             titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
             titleLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4)
         ])
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
     
     func configure(with title: String) {

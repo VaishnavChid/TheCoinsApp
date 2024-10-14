@@ -12,43 +12,53 @@ class DetailsTableViewCell: UITableViewCell {
     // MARK: - UI Properties
     
     private let newImageView: UIImageView = {
-      let imageView = UIImageView()
-      imageView.translatesAutoresizingMaskIntoConstraints = false
-      imageView.contentMode = .scaleAspectFill
-      imageView.clipsToBounds = true
-      return imageView
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        return imageView
     }()
     
     private let coinImageView: UIImageView = {
-      let imageView = UIImageView()
-      imageView.translatesAutoresizingMaskIntoConstraints = false
-      imageView.contentMode = .scaleAspectFill
-      imageView.clipsToBounds = true
-      return imageView
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        return imageView
     }()
-
+    
     private let titleLabel: UILabel = {
-      let label = UILabel()
-      label.translatesAutoresizingMaskIntoConstraints = false
-      label.font = UIFont.preferredFont(forTextStyle: .headline)
-      label.numberOfLines = 0
-      label.lineBreakMode = .byWordWrapping
-      return label
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = UIFont.preferredFont(forTextStyle: .headline)
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        return label
     }()
-
+    
     private let subtitleLabel: UILabel = {
-      let label = UILabel()
-      label.translatesAutoresizingMaskIntoConstraints = false
-      label.font = UIFont.preferredFont(forTextStyle: .caption1)
-      label.numberOfLines = 0
-      label.lineBreakMode = .byWordWrapping
-      return label
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = UIFont.preferredFont(forTextStyle: .caption1)
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        return label
     }()
     
     // MARK: - INITIALIZER
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        setupUI()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Setup UI
+    
+    private func setupUI() {
         
         selectionStyle = .none
         
@@ -80,10 +90,6 @@ class DetailsTableViewCell: UITableViewCell {
         ])
     }
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
     // MARK: - Configure Cell
     
     func configure(with details: DataResponseModel) {
@@ -110,5 +116,5 @@ class DetailsTableViewCell: UITableViewCell {
             coinImageView.image = UIImage(named: AppConstants.imageCryptoCoinInActive.rawValue)
         }
     }
-
+    
 }

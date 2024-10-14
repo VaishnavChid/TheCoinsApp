@@ -8,10 +8,19 @@ protocol ChipsViewControllerDelegate: AnyObject {
 class ChipsViewController: UIViewController {
     
     private var collectionView: UICollectionView!
-    let filterOptions = ["Active Coins", "Inactive Coins", "Only Tokens", "Only Coins", "New Coins"]
-    
-    var selectedFilterData: [String]?
+    private let viewModel: ChipsViewModel
     weak var delegate: ChipsViewControllerDelegate?
+    
+    
+    // MARK: - Initializer
+        init(viewModel: ChipsViewModel) {
+            self.viewModel = viewModel
+            super.init(nibName: nil, bundle: nil)
+        }
+    
+    required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,7 +43,7 @@ class ChipsViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.delegate = self
         collectionView.dataSource = self
-        collectionView.register(ChipCell.self, forCellWithReuseIdentifier: "ChipCell")
+        collectionView.register(ChipCollectionViewCell.self, forCellWithReuseIdentifier: ChipCollectionViewCell.reuseId)
         collectionView.allowsMultipleSelection = true
         
         view.addSubview(collectionView)
@@ -54,32 +63,32 @@ extension ChipsViewController: UICollectionViewDelegateFlowLayout, UICollectionV
     // MARK: - Collection View Data Source
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return filterOptions.count
+        return viewModel.filterOptions.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ChipCell", for: indexPath) as! ChipCell
-        cell.configure(with: filterOptions[indexPath.row])
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ChipCollectionViewCell.reuseId, for: indexPath) as? ChipCollectionViewCell else { return UICollectionViewCell() }
+        cell.configure(with: viewModel.filterOptions[indexPath.row])
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        if let cell = collectionView.cellForItem(at: indexPath) as? ChipCell {
-            cell.contentView.backgroundColor = UIColor.systemGray
-            let selectedOption = filterOptions[indexPath.row]
-            if !(selectedFilterData?.contains(selectedOption) ?? false) {
-                selectedFilterData?.append(selectedOption)
+        if let cell = collectionView.cellForItem(at: indexPath) as? ChipCollectionViewCell {
+            cell.contentView.backgroundColor = cell.selectedBackgroundColor
+            let selectedOption = viewModel.filterOptions[indexPath.row]
+            if !(viewModel.selectedFilterData.contains(selectedOption)) {
+                viewModel.selectedFilterData.append(selectedOption)
             }
             delegate?.didUpdateSelectedFilters(selectedOption, isSelected: true)
         }
     }
 
     func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
-        if let cell = collectionView.cellForItem(at: indexPath) as? ChipCell {
-            cell.contentView.backgroundColor = UIColor.lightGray
-            let deselectedOption = filterOptions[indexPath.row]
-            if let index = selectedFilterData?.firstIndex(of: deselectedOption) {
-                selectedFilterData?.remove(at: index)
+        if let cell = collectionView.cellForItem(at: indexPath) as? ChipCollectionViewCell {
+            cell.contentView.backgroundColor = cell.deselectedBackgroundColor
+            let deselectedOption = viewModel.filterOptions[indexPath.row]
+            if let index = viewModel.selectedFilterData.firstIndex(of: deselectedOption) {
+                viewModel.selectedFilterData.remove(at: index)
             }
             delegate?.didUpdateSelectedFilters(deselectedOption, isSelected: false)
         }
@@ -88,7 +97,7 @@ extension ChipsViewController: UICollectionViewDelegateFlowLayout, UICollectionV
     // MARK: - Flow Layout Delegate
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let title = filterOptions[indexPath.row]
+        let title = viewModel.filterOptions[indexPath.row]
         let width = title.size(withAttributes: [.font: UIFont.systemFont(ofSize: 14, weight: .medium)]).width + 18
         return CGSize(width: width, height: 30)
     }
